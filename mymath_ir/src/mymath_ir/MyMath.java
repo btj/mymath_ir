@@ -1,5 +1,6 @@
 package mymath_ir;
 
+import java.util.Arrays;
 import java.util.stream.IntStream;
 
 public class MyMath {
@@ -28,6 +29,7 @@ public class MyMath {
 	 *     | haystack != null
 	 * @pre `haystack` is sorted.
 	 *     | IntStream.range(1, haystack.length).allMatch(i -> haystack[i - 1] <= haystack[i])
+	 * @inspects | haystack
 	 * @post The result is nonnegative
 	 *     | 0 <= result
 	 * @post The result is not greater than the length of `haystack`
@@ -56,6 +58,7 @@ public class MyMath {
 	 * 
 	 * @pre | xs != null
 	 * @pre | 0 <= n && n <= xs.length
+	 * @inspects | xs
 	 * @post | result == IntStream.range(0, n).filter(i -> xs[i] == v).count()
 	 */
 	static long count(int[] xs, int n, int v) {
@@ -66,11 +69,14 @@ public class MyMath {
 	 * Inserts the given value `v` into the sorted sequence of values at indices 0 (inclusive)
 	 * through `n` (exclusive) in array `xs`, shifting elements to the right as necessary.
 	 * 
+	 * Contractueel
+	 * 
 	 * @pre | xs != null
 	 * @pre | 0 <= n
 	 * @pre | n < xs.length
 	 * @pre The elements at indices 0 (inclusive) through `n` (exclusive) in `xs` are sorted.
 	 *      | IntStream.range(1, n).allMatch(i -> xs[i - 1] <= xs[i])
+	 * @mutates | xs
 	 * @post The elements at indices 0 (inclusive) through `n + 1` (exclusive) in `xs` are sorted.
 	 *      | IntStream.range(1, n + 1).allMatch(i -> xs[i - 1] <= xs[i])
 	 * @post For each element `e` in `xs[0:n + 1]`, the number of occurrences of `e` equals the old
@@ -82,16 +88,51 @@ public class MyMath {
 	 *      | )
 	 */
 	static void insert(int[] xs, int n, int v) {
-		// TODO: Implementeer en schrijf een testsuite!
+		int i = 0;
+		while (i < n && xs[i] < v)
+			i++;
+		for (int j = n; i < j; j--)
+			xs[j] = xs[j - 1];
+		xs[i] = v;
 	}
 	
 	/**
-	 * TODO: Documenteer informeel en formeel!
-	 * @param xs
+	 * Defensief programmeren
+	 * 
+	 * @throws IllegalArgumentException | xs == null
+	 * @mutates | xs
+	 * @post The given array's elements are in ascending order.
+	 *     | IntStream.range(1, xs.length).allMatch(i -> xs[i - 1] <= xs[i])
+	 * @post For each element in the array, the number of times it occurs in the array equals the
+	 *       number of times it occured in the array before the method was called. 
+	 *       | Arrays.stream(xs).allMatch(e ->
+	 *       |     IntStream.range(0, xs.length).filter(i -> xs[i] == e).count() ==
+	 *       |     IntStream.range(0, xs.length).filter(i -> old(xs.clone())[i] == e).count()
+	 *       | )
 	 */
 	static void insertionSort(int[] xs) {
-		// TODO: Implementeer en schrijf een testsuite!
+		if (xs == null)
+			throw new IllegalArgumentException("`xs` is null");
+		
+		for (int n = 1; n < xs.length; n++)
+			insert(xs, n, xs[n]);
 	}
 
+	/**
+	 * @inspects nothing |
+	 */
+	static boolean isSameArray(int[] xs1, int[] xs2) {
+		return xs1 == xs2;
+	}
+	
+	/**
+	 * @creates | result
+	 */
+	static int[] copy(int[] xs) {
+		int[] result = new int[xs.length];
+		for (int i = 0; i < xs.length; i++)
+			result[i] = xs[i];
+		return result;
+	}
 
 }
